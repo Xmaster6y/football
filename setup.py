@@ -70,6 +70,7 @@ class CustomBuild(build_ext):
             'Failed to copy pre-built library to a final destination %s.' %
             dest_dir)
     else:
+      os.environ.setdefault('GFOOTBALL_PYTHON_EXECUTABLE', sys.executable)
       # Compile the engine
       if os.system('gfootball/build_game_engine.sh'):
         raise OSError('Google Research Football compilation failed')

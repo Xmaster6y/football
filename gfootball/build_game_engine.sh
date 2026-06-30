@@ -20,9 +20,12 @@ if [[ "$OSTYPE" == "darwin"* ]] ; then
     LIB_EXTENSION="dylib"
 fi
 
+PYTHON_EXECUTABLE="${GFOOTBALL_PYTHON_EXECUTABLE:-$(python3 -c 'import sys; print(sys.executable)')}"
+PYTHON_ROOT_DIR="$(cd "$(dirname "$PYTHON_EXECUTABLE")/.." && pwd)"
+
 # Take into account # of cores and available RAM for deciding on compilation parallelism.
 # Try importing psutil and if failed fall back to 1 thread
-PARALLELISM=$(python3 -c 'try:
+PARALLELISM=$("$PYTHON_EXECUTABLE" -c 'try:
     import psutil
     import multiprocessing as mp
     print(int(max(1,min((psutil.virtual_memory().available/1000000000-1)/0.5, mp.cpu_count()))))
@@ -32,5 +35,5 @@ except ImportError:
 
 # Delete pre-existing version of CMakeCache.txt to make 'python3 -m pip install' work.
 rm -f third_party/gfootball_engine/CMakeCache.txt
-pushd third_party/gfootball_engine && cmake . && make -j $PARALLELISM && popd
+pushd third_party/gfootball_engine && cmake -DPython_EXECUTABLE:FILEPATH="$PYTHON_EXECUTABLE" -DPython_ROOT_DIR:PATH="$PYTHON_ROOT_DIR" . && make -j $PARALLELISM && popd
 pushd third_party/gfootball_engine && ln -sf libgame.$LIB_EXTENSION _gameplayfootball.so && popd
